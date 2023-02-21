@@ -210,6 +210,11 @@ def init():
 #def say_hello(name):
     #return 'called with ' +name
 
+# Load Browser Favorite Icon
+#@app.route('/rb-star.ico')
+#def favicon():
+    #return url_for('static', filename='image/favicon.ico')
+
 
 @app.route("/<string:mask>/<string:disallowed>")
 def say_hello2(mask, disallowed):
