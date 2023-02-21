@@ -1,0 +1,3 @@
+User-agent: *
+Sitemap: http://www.nestormakhno.com/sitemap.xml
+Sitemap: https://www.nestormakhno.com/sitemap.xml

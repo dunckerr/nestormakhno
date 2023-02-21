@@ -1,6 +1,6 @@
 #https://twdown.net/?error=nolink
 #https://cloudconvert.com/mov-to-mp4
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 
 import os
 import sys
@@ -12,11 +12,11 @@ import re
 WORDLEN = 5
 
 if sys.platform == 'win32':
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder="static")
+    app.debug = True
 else:
-    app = Flask(__name__, static_url_path='/home/x1lcedpr5zdi/WebSite1')
+    app = Flask(__name__, static_url_path='/home/x1lcedpr5zdi/WebSite1', static_folder="static")
 
-app.debug = True
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -45,6 +45,11 @@ def dk_input(prompt, default, maxlen):
             return r
         else:
             pass
+
+@app.route('/robots.txt')
+@app.route('/sitemap.xml')
+def static_from_root():
+    return send_from_directory(app.static_folder, request.path[1:])
 
 def gen_possibles(mask, nots):
     #print("got args mask {mask} nots {nots}")
