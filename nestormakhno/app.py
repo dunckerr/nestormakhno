@@ -169,17 +169,13 @@ def dkrender(html, img):
         return render_template(html, user_image=img, path="/home/x1lcedpr5zdi/WebSite1/")
 
 
-@app.route("/zz1")
-def show_indexz1():
-    return dkrender("index.html", "IMG_0021.jpg")
+#@app.route("/zz1")
+#def show_indexz1():
+    #return dkrender("index.html", "IMG_0021.jpg")
 
-@app.route("/zz2")
-def show_indexz2():
-    return dkrender("index2.html", "IMG_0021.jpg")
-
-@app.route("/zz3")
-def show_indexz3():
-    return dkrender("zz3.html", "IMG_0021.jpg")
+#@app.route("/zz2")
+#def show_indexz2():
+    #return dkrender("index2.html", "IMG_0021.jpg")
 
 @app.route("/cat")
 def show_cat():
@@ -191,9 +187,13 @@ def show_cat():
 def show_index2():
     return os.getcwd()
 
+@app.route("/nestor")
+def nestor():
+    return dkrender("main.html", "pic1.png")
+
 @app.route("/")
 def hello():
-    return dkrender("main.html", "pic1.png")
+    return dkrender("wordlcheat.html", "pic1.png")
 
 @app.route("/words")
 def test():
@@ -242,15 +242,15 @@ def say_hello2(mask, disallowed):
         #return '<H3>' + str(len(poss))+'/'+str(len(_word5)) + '</H3>'
 
 #################  new ###################
-@app.route('/form')
+@app.route('/wordlcheat')
 def form():
-    return render_template('form.html')
+    return render_template('wordlcheat.html')
 
 
 @app.route('/data', methods=['POST', 'GET'])
 def data():
     if request.method == 'GET':
-        return "The URL /data is accessed directly. Try going to '/form' to submit form"
+        return "The URL /data is accessed directly. Try going to '/wordlcheat' to submit form"
     if request.method == 'POST':
         form_data = request.form
         #calling render with ImmutableMultiDict([('c1', 'r'), ('c2', 'a'), ('c3', 'm')])
