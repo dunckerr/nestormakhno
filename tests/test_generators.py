@@ -28,6 +28,30 @@ def test_gen_possibles_extra():
     # chars in g y and nots
 
 
+def test_contains_all():
+
+    # teststring charset
+    assert app.containsAll("dunc", "c") == True
+    assert app.containsAll("dunc", "") == True
+    assert app.containsAll("dunc", "duncx") == False
+    assert app.containsAll("", "d") == False
+    assert app.containsAll("x", "x") == True
+    assert app.containsAll("x", "") == True
+    assert app.containsAll("dunc", "dc") == True
+    assert app.containsAll("block", "u") == False
+
+def test_new_gen():
+    ds = [
+        ['c', '', '', '', '',  '', '', '', 'a', ''],
+        ['', 'a', '', '', '',  '', '', '', '', 'r'],
+        ['', '', 'r', '', '',  '', 'c', '', '', ''],
+        ['', '', '', '', '',   '', '', '', '', ''],
+        ['', '', '', '', '',   '', '', '', '', ''],
+    ]
+    words, mask = app.new_gen(ds,'bnjkl')
+    assert len(words) == 8
+
+
 def test_regex():
 
     mask = 'a....'

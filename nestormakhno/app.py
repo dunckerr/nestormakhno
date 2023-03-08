@@ -83,14 +83,59 @@ def genmask(green,yellow,nots):
     else:
         if len(yellow) > 0:
             if len(nots) > 0:
-                return "[^"+yellow[0]+nots+"]"
+                #return "[^"+yellow[0]+nots+"]"
+                return "[^"+yellow+nots+"]"
             else:
-                return "[^"+yellow[0]+"]"
+                return "[^"+yellow+"]"
+                #return "[^"+yellow[0]+"]"
         else:
             if len(nots) > 0:
                 return "[^"+nots+"]"
             else:
                 return "."
+
+def getUserChar(maxrow, col, ds, yellowGreen):
+    found = ""
+    for i in range(0,maxrow+1):
+        if len(ds[i][col]) > 0:
+            if yellowGreen == "y":
+                found = found + ds[i][col]
+            else:
+                found = ds[i][col]
+            print(f"char for {yellowGreen} col {col} is {found}")
+
+    return found
+
+def new_gen(ds, nots):
+    # start with top row 0 indexed
+    maxrow = -1
+    for c in range(0,5):
+        for i in range(0,10):
+            if len(ds[c][i]) > 0:
+                print(f"FOUND DATA AT row {c} pos {i}")
+                maxrow = c
+    print(f"MAX ROW {maxrow}")
+    g1 = getUserChar(maxrow, 0, ds, "g") # row 0 greens
+    g2 = getUserChar(maxrow, 1, ds, "g") # row 1 greens
+    g3 = getUserChar(maxrow, 2, ds, "g") # row 2 greens
+    g4 = getUserChar(maxrow, 3, ds, "g") # row 3 greens
+    g5 = getUserChar(maxrow, 4, ds, "g") # row 4 greens
+    y1 = getUserChar(maxrow, 5, ds, "y") # row 0 yellows
+    y2 = getUserChar(maxrow, 6, ds, "y") # row 1 yellows
+    y3 = getUserChar(maxrow, 7, ds, "y") # row 2 yellows
+    y4 = getUserChar(maxrow, 8, ds, "y") # row 3 yellows
+    y5 = getUserChar(maxrow, 9, ds, "y") # row 4 yellows
+    yellows = set(y1+y2+y3+y4+y5)
+
+    words,mask = gen_possibles_extra(g1,g2,g3,g4,g5,y1,y2,y3,y4,y5,nots)
+
+    # TODO remove words not in yellows
+    words2 = list()
+    for w in words:
+        if containsAll(w, yellows):
+            words2.append(w)
+
+    return words2,mask
 
 
 def gen_possibles_extra(c1,c2,c3,c4,c5,y1,y2,y3,y4,y5,nots):
@@ -101,17 +146,24 @@ def gen_possibles_extra(c1,c2,c3,c4,c5,y1,y2,y3,y4,y5,nots):
     newmask += genmask(c4,y4,nots)
     newmask += genmask(c5,y5,nots)
 
+    #print("generated mask:"+newmask)
     logger.warning("generated mask:"+newmask)
     r = re.compile('^' + newmask + '$')
     fp = open('lower-only', 'r')
     wtmp = fp.read()
     words = wtmp.split('\n')
     word5 = list(filter(r.match, words))
-    #print('words list len '+str(len(words)))
-    #print('possibles list len '+str(len(word5)))
 
-    return word5
+    return word5,newmask
 
+
+def containsAll(str, cset):
+    """
+    :param str: check whether str contains ALL of the chars in cset
+    :param cset:
+    :return:
+    """
+    return 0 not in [c in str for c in cset]
 
 def main_test():
     mask = '.....'
@@ -193,7 +245,8 @@ def nestor():
 
 @app.route("/")
 def hello():
-    return dkrender("wordlcheat.html", "pic1.png")
+    return dkrender("newwordl.html", "pic1.png")
+    #return dkrender("wordlcheat.html", "pic1.png")
 
 @app.route("/words")
 def test():
@@ -241,11 +294,16 @@ def say_hello2(mask, disallowed):
     #else:
         #return '<H3>' + str(len(poss))+'/'+str(len(_word5)) + '</H3>'
 
-#################  new ###################
+#################  MAPPINGS ###################
+# /wordlcheat  -> data.hmtl  ->  /data gen_possibles_extra   ALL WORKING
+# /new  -> newword.html -> /data2
 @app.route('/wordlcheat')
 def form():
     return render_template('wordlcheat.html')
 
+@app.route('/new')
+def form2():
+    return render_template('newwordl.html')
 
 @app.route('/data', methods=['POST', 'GET'])
 def data():
@@ -253,15 +311,36 @@ def data():
         return "The URL /data is accessed directly. Try going to '/wordlcheat' to submit form"
     if request.method == 'POST':
         form_data = request.form
-        #calling render with ImmutableMultiDict([('c1', 'r'), ('c2', 'a'), ('c3', 'm')])
-        #poss = gen_possibles(form_data['c1']+ form_data['c2']+ form_data['c3']+ form_data['c4']+ form_data['c5'], form_data['nn'])
-        #poss = gen_possibles_extra(form_data['c1'], form_data['c2'], form_data['c3'], form_data['c4'], form_data['c5'],
-                                   #form_data['y1'], form_data['y2'], form_data['y3'], form_data['y4'], form_data['y5'], form_data['nn'])
-        poss = gen_possibles_extra(form_data['c1'], form_data['c2'], form_data['c3'], form_data['c4'], form_data['c5'], form_data['y1'], form_data['y2'], form_data['y3'], form_data['y4'], form_data['y5'], form_data['nn'])
-        #print(f'got possibles {poss}')
-        #print(f'calling render with {form_data}')
-        xlen=len(poss)
-        return render_template('data.html', form_data=form_data, words=poss, xlen=xlen)
+        words,mask = gen_possibles_extra(form_data['c1'], form_data['c2'], form_data['c3'], form_data['c4'], form_data['c5'], form_data['y1'], form_data['y2'], form_data['y3'], form_data['y4'], form_data['y5'], form_data['nn'])
+        xlen=len(words)
+        return render_template('data.html', form_data=form_data, words=words, xlen=xlen, mask=mask)
+
+@app.route('/data2', methods=['POST', 'GET'])
+def data2():
+    if request.method == 'GET':
+        return "The URL /data2 is accessed directly. Try going to '/new' to submit form"
+    if request.method == 'POST':
+        fd = request.form
+        ds = [
+            [fd['r1g1'], fd['r1g2'], fd['r1g3'], fd['r1g4'], fd['r1g5'], fd['r1y1'], fd['r1y2'], fd['r1y3'], fd['r1y4'], fd['r1y5']],
+            [fd['r2g1'], fd['r2g2'], fd['r2g3'], fd['r2g4'], fd['r2g5'], fd['r2y1'], fd['r2y2'], fd['r2y3'], fd['r2y4'], fd['r2y5']],
+            [fd['r3g1'], fd['r3g2'], fd['r3g3'], fd['r3g4'], fd['r3g5'], fd['r3y1'], fd['r3y2'], fd['r3y3'], fd['r3y4'], fd['r3y5']],
+            [fd['r4g1'], fd['r4g2'], fd['r4g3'], fd['r4g4'], fd['r4g5'], fd['r4y1'], fd['r4y2'], fd['r4y3'], fd['r4y4'], fd['r4y5']],
+            [fd['r5g1'], fd['r5g2'], fd['r5g3'], fd['r5g4'], fd['r5g5'], fd['r5y1'], fd['r5y2'], fd['r5y3'], fd['r5y4'], fd['r5y5']]
+        ]
+        words, mask = new_gen(ds, fd['nn'])
+
+        return render_template('data2.html', form_data=fd, words=words, xlen=len(words), mask=mask)
+
+@app.route('/TT1/')
+def send_tt1():
+    return send_from_directory(app.static_folder, 'Timetable 10 Cambridge to Ely, Peterborough and Norwich Large Print.pdf')
+@app.route('/TT2/')
+def send_tt2():
+    return send_from_directory(app.static_folder, 'Timetable 12 Cambridge and Stansted Airport to London Large Print.pdf')
+@app.route('/TT3/')
+def send_tt3():
+    return send_from_directory(app.static_folder, "Timetable 13 King's Lynn and Ely to London (direct services) Large Print.pdf")
 
 if __name__ == "__main__":
     app.run()
