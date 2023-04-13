@@ -1,3 +1,5 @@
+# TODO return main shld be back not back to /
+# enter chars auto-tab next
 #https://twdown.net/?error=nolink
 #https://cloudconvert.com/mov-to-mp4
 from flask import Flask, render_template, request, send_from_directory
@@ -100,12 +102,12 @@ def getUserChar3(maxrow, col, ds, yellowGreen):
         found = ds[0][col]  # green always row1
     else:
         for i in range(1,maxrow+1):
-            print(f"testing {yellowGreen} row {i} col {col}")
+            #print(f"testing {yellowGreen} row {i} col {col}")
             if len(ds[i][col]) > 0:
                 found = found + ds[i][col]
-                print(f"char added for {yellowGreen} row {i} col {col} is {found}")
+                #print(f"char added for {yellowGreen} row {i} col {col} is {found}")
 
-    print(f"char for {yellowGreen} col {col} maxrow {maxrow} is {found}")
+    #print(f"char for {yellowGreen} col {col} maxrow {maxrow} is {found}")
     return found
 
 def getUserChar(maxrow, col, ds, yellowGreen):
