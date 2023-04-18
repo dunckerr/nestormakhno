@@ -19,6 +19,7 @@ def test_genmask():
 
 def test_gen_possibles_extra():
 
+    ret = app.gen_possibles_extra("a","t","","","","zxcv","zxcv","zxcv","zxcv","zxcv","wqerpiru")
     ret = app.gen_possibles_extra("","","","","","","","","","","")
     assert len(ret) == 50
     ret = app.gen_possibles_extra("a","","","","","","","","","","wqerpoiru")

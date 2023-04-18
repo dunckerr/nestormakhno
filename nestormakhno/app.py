@@ -83,18 +83,18 @@ def genmask(green,yellow,nots):
     if len(green) > 0:
         return green[0]
     else:
-        if len(yellow) > 0:
-            if len(nots) > 0:
-                #return "[^"+yellow[0]+nots+"]"
-                return "[^"+yellow+nots+"]"
-            else:
-                return "[^"+yellow+"]"
-                #return "[^"+yellow[0]+"]"
+        #if len(yellow) > 0:
+            #if len(nots) > 0:
+                ##return "[^"+yellow[0]+nots+"]"
+                #return "[^"+yellow+nots+"]"
+            #else:
+                #return "[^"+yellow+"]"
+                ##return "[^"+yellow[0]+"]"
+        #else:
+        if len(nots) > 0:
+            return "[^"+nots+"]"
         else:
-            if len(nots) > 0:
-                return "[^"+nots+"]"
-            else:
-                return "."
+            return "."
 
 def getUserChar3(maxrow, col, ds, yellowGreen):
     found = ""
@@ -184,6 +184,51 @@ def new3_gen(ds, nots):
 
     return words2,mask
 
+def new4_gen(ds, nots, yellow):
+    # start with top row 0 indexed
+    maxrow = 1
+    g1 = getUserChar3(maxrow, 0, ds, "g") # row 0 greens
+    g2 = getUserChar3(maxrow, 1, ds, "g") # row 1 greens
+    g3 = getUserChar3(maxrow, 2, ds, "g") # row 2 greens
+    g4 = getUserChar3(maxrow, 3, ds, "g") # row 3 greens
+    g5 = getUserChar3(maxrow, 4, ds, "g") # row 4 greens
+    #y1 = getUserChar3(maxrow, 0, ds, "y") # row 0 yellows
+    #y2 = getUserChar3(maxrow, 1, ds, "y") # row 1 yellows
+    #y3 = getUserChar3(maxrow, 2, ds, "y") # row 2 yellows
+    ##y4 = getUserChar3(maxrow, 3, ds, "y") # row 3 yellows
+    #y5 = getUserChar3(maxrow, 4, ds, "y") # row 4 yellows
+    #yellows = set(y1+y2+y3+y4+y5)
+    yellows = set(yellow)
+
+    words,mask = gen_possibles_extra4(g1,g2,g3,g4,g5,yellow,nots)
+
+    # TODO
+    words2 = list()
+    #mask="....."
+    for w in words:
+        if containsAll(w, yellows):
+            words2.append(w)
+
+    return words2,mask
+
+
+def gen_possibles_extra4(c1,c2,c3,c4,c5,yellow,nots):
+    newmask = ""
+    newmask += genmask(c1,yellow,nots)
+    newmask += genmask(c2,yellow,nots)
+    newmask += genmask(c3,yellow,nots)
+    newmask += genmask(c4,yellow,nots)
+    newmask += genmask(c5,yellow,nots)
+
+    #print("generated mask:"+newmask)
+    logger.warning("generated mask:"+newmask)
+    r = re.compile('^' + newmask + '$')
+    fp = open('lower-only', 'r')
+    wtmp = fp.read()
+    words = wtmp.split('\n')
+    word5 = list(filter(r.match, words))
+
+    return word5,newmask
 
 
 def gen_possibles_extra(c1,c2,c3,c4,c5,y1,y2,y3,y4,y5,nots):
@@ -293,7 +338,7 @@ def nestor():
 
 @app.route("/")
 def hello():
-    return dkrender("new3.html", "pic1.png")
+    return dkrender("new4.html", "pic1.png")
     #return dkrender("wordlcheat.html", "pic1.png")
 
 @app.route("/words")
@@ -357,6 +402,9 @@ def form2():
 @app.route('/new3')
 def form3():
     return render_template('new3.html')
+@app.route('/new4')
+def form4():
+    return render_template('new4.html')
 
 @app.route('/data', methods=['POST', 'GET'])
 def data():
@@ -401,6 +449,18 @@ def data3():
         ]
         words, mask = new3_gen(ds, fd['nn'])
         return render_template('data2.html', form_data=fd, words=words, xlen=len(words), mask=mask)
+
+@app.route('/data4', methods=['POST', 'GET'])
+def data4():
+    if request.method == 'GET':
+        return "The URL /data4 is accessed directly. Try going to '/new4' to submit form"
+    if request.method == 'POST':
+        fd = request.form
+        ds = [
+            [fd['r1g1'], fd['r1g2'], fd['r1g3'], fd['r1g4'], fd['r1g5']],
+        ]
+        words, mask = new4_gen(ds, fd['nn'], fd['yy'])
+        return render_template('data4.html', form_data=fd, words=words, xlen=len(words), mask=mask)
 
 
 @app.route('/TT1/')
