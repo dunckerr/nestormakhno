@@ -184,7 +184,7 @@ def new3_gen(ds, nots):
 
     return words2,mask
 
-def new4_gen(ds, nots, yellow):
+def new4_gen(ds, nots, yellow, lang):
     # start with top row 0 indexed
     maxrow = 1
     g1 = getUserChar3(maxrow, 0, ds, "g") # row 0 greens
@@ -200,7 +200,7 @@ def new4_gen(ds, nots, yellow):
     #yellows = set(y1+y2+y3+y4+y5)
     yellows = set(yellow)
 
-    words,mask = gen_possibles_extra4(g1,g2,g3,g4,g5,yellow,nots)
+    words,mask = gen_possibles_extra4(g1,g2,g3,g4,g5,yellow,nots, lang)
 
     # TODO
     words2 = list()
@@ -212,7 +212,7 @@ def new4_gen(ds, nots, yellow):
     return words2,mask
 
 
-def gen_possibles_extra4(c1,c2,c3,c4,c5,yellow,nots):
+def gen_possibles_extra4(c1,c2,c3,c4,c5,yellow,nots, lang):
     newmask = ""
     newmask += genmask(c1,yellow,nots)
     newmask += genmask(c2,yellow,nots)
@@ -220,13 +220,20 @@ def gen_possibles_extra4(c1,c2,c3,c4,c5,yellow,nots):
     newmask += genmask(c4,yellow,nots)
     newmask += genmask(c5,yellow,nots)
 
-    #print("generated mask:"+newmask)
     logger.warning("generated mask:"+newmask)
     r = re.compile('^' + newmask + '$')
-    fp = open('lower-only', 'r')
-    wtmp = fp.read()
-    words = wtmp.split('\n')
-    word5 = list(filter(r.match, words))
+
+    try:
+        if lang == "english":
+            fp = open(f"{lang}.txt", 'r')
+        else:
+            fp = open(f"{lang}5.txt", 'r')
+        wtmp = fp.read()
+        words = wtmp.split('\n')
+        word5 = list(filter(r.match, words))
+    except FileNotFoundError as ex:
+        word5 = list(f"WORD LIST MISSING FOR {lang}")
+
 
     return word5,newmask
 
@@ -239,7 +246,6 @@ def gen_possibles_extra(c1,c2,c3,c4,c5,y1,y2,y3,y4,y5,nots):
     newmask += genmask(c4,y4,nots)
     newmask += genmask(c5,y5,nots)
 
-    #print("generated mask:"+newmask)
     logger.warning("generated mask:"+newmask)
     r = re.compile('^' + newmask + '$')
     fp = open('lower-only', 'r')
@@ -459,7 +465,8 @@ def data4():
         ds = [
             [fd['r1g1'], fd['r1g2'], fd['r1g3'], fd['r1g4'], fd['r1g5']],
         ]
-        words, mask = new4_gen(ds, fd['nn'], fd['yy'])
+        print(f"lang {fd['lang']}")
+        words, mask = new4_gen(ds, fd['nn'], fd['yy'], fd['lang'])
         return render_template('data4.html', form_data=fd, words=words, xlen=len(words), mask=mask)
 
 
