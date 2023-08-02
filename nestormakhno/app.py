@@ -8,6 +8,7 @@ import os
 import sys
 import logging
 import re
+import codecs
 
 # https://twdown.net/download.php
 
@@ -227,7 +228,7 @@ def gen_possibles_extra4(c1,c2,c3,c4,c5,yellow,nots, lang):
         if lang == "english":
             fp = open(f"{lang}.txt", 'r')
         else:
-            fp = open(f"{lang}5.txt", 'r')
+            fp = codecs.open(f"{lang}5.txt", encoding='utf-8')
         wtmp = fp.read()
         words = wtmp.split('\n')
         word5 = list(filter(r.match, words))
@@ -469,7 +470,11 @@ def data4():
         words, mask = new4_gen(ds, fd['nn'], fd['yy'], fd['lang'])
         return render_template('data4.html', form_data=fd, words=words, xlen=len(words), mask=mask)
 
-
+# https://ojp.nationalrail.co.uk/service/pockettimetable/search
+@app.route('/TT0/')
+def send_tt0():
+    return send_from_directory(app.static_folder, 'SIMPLE.pdf')
+#https://www.greateranglia.co.uk/timetables
 @app.route('/TT1/')
 def send_tt1():
     return send_from_directory(app.static_folder, 'Timetable 10 Cambridge to Ely, Peterborough and Norwich Large Print.pdf')
