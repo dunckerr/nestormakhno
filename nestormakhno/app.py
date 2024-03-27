@@ -1,3 +1,5 @@
+# TODO return main shld be back not back to /
+# enter chars auto-tab next
 #https://twdown.net/?error=nolink
 #https://cloudconvert.com/mov-to-mp4
 from flask import Flask, render_template, request, send_from_directory
@@ -6,6 +8,7 @@ import os
 import sys
 import logging
 import re
+import codecs
 
 # https://twdown.net/download.php
 
@@ -81,18 +84,18 @@ def genmask(green,yellow,nots):
     if len(green) > 0:
         return green[0]
     else:
-        if len(yellow) > 0:
-            if len(nots) > 0:
-                #return "[^"+yellow[0]+nots+"]"
-                return "[^"+yellow+nots+"]"
-            else:
-                return "[^"+yellow+"]"
-                #return "[^"+yellow[0]+"]"
+        #if len(yellow) > 0:
+            #if len(nots) > 0:
+                ##return "[^"+yellow[0]+nots+"]"
+                #return "[^"+yellow+nots+"]"
+            #else:
+                #return "[^"+yellow+"]"
+                ##return "[^"+yellow[0]+"]"
+        #else:
+        if len(nots) > 0:
+            return "[^"+nots+"]"
         else:
-            if len(nots) > 0:
-                return "[^"+nots+"]"
-            else:
-                return "."
+            return "."
 
 def getUserChar3(maxrow, col, ds, yellowGreen):
     found = ""
@@ -100,12 +103,12 @@ def getUserChar3(maxrow, col, ds, yellowGreen):
         found = ds[0][col]  # green always row1
     else:
         for i in range(1,maxrow+1):
-            print(f"testing {yellowGreen} row {i} col {col}")
+            #print(f"testing {yellowGreen} row {i} col {col}")
             if len(ds[i][col]) > 0:
                 found = found + ds[i][col]
-                print(f"char added for {yellowGreen} row {i} col {col} is {found}")
+                #print(f"char added for {yellowGreen} row {i} col {col} is {found}")
 
-    print(f"char for {yellowGreen} col {col} maxrow {maxrow} is {found}")
+    #print(f"char for {yellowGreen} col {col} maxrow {maxrow} is {found}")
     return found
 
 def getUserChar(maxrow, col, ds, yellowGreen):
@@ -182,6 +185,58 @@ def new3_gen(ds, nots):
 
     return words2,mask
 
+def new4_gen(ds, nots, yellow, lang):
+    # start with top row 0 indexed
+    maxrow = 1
+    g1 = getUserChar3(maxrow, 0, ds, "g") # row 0 greens
+    g2 = getUserChar3(maxrow, 1, ds, "g") # row 1 greens
+    g3 = getUserChar3(maxrow, 2, ds, "g") # row 2 greens
+    g4 = getUserChar3(maxrow, 3, ds, "g") # row 3 greens
+    g5 = getUserChar3(maxrow, 4, ds, "g") # row 4 greens
+    #y1 = getUserChar3(maxrow, 0, ds, "y") # row 0 yellows
+    #y2 = getUserChar3(maxrow, 1, ds, "y") # row 1 yellows
+    #y3 = getUserChar3(maxrow, 2, ds, "y") # row 2 yellows
+    ##y4 = getUserChar3(maxrow, 3, ds, "y") # row 3 yellows
+    #y5 = getUserChar3(maxrow, 4, ds, "y") # row 4 yellows
+    #yellows = set(y1+y2+y3+y4+y5)
+    yellows = set(yellow)
+
+    words,mask = gen_possibles_extra4(g1,g2,g3,g4,g5,yellow,nots, lang)
+
+    # TODO
+    words2 = list()
+    #mask="....."
+    for w in words:
+        if containsAll(w, yellows):
+            words2.append(w)
+
+    return words2,mask
+
+
+def gen_possibles_extra4(c1,c2,c3,c4,c5,yellow,nots, lang):
+    newmask = ""
+    newmask += genmask(c1,yellow,nots)
+    newmask += genmask(c2,yellow,nots)
+    newmask += genmask(c3,yellow,nots)
+    newmask += genmask(c4,yellow,nots)
+    newmask += genmask(c5,yellow,nots)
+
+    logger.warning("generated mask:"+newmask)
+    r = re.compile('^' + newmask + '$')
+
+    try:
+        if lang == "english":
+            fp = open(f"{lang}.txt", 'r')
+        else:
+            fp = codecs.open(f"{lang}5.txt", encoding='utf-8')
+        wtmp = fp.read()
+        words = wtmp.split('\n')
+        word5 = list(filter(r.match, words))
+    except FileNotFoundError as ex:
+        word5 = list(f"WORD LIST MISSING FOR {lang}")
+
+
+    return word5,newmask
 
 
 def gen_possibles_extra(c1,c2,c3,c4,c5,y1,y2,y3,y4,y5,nots):
@@ -192,7 +247,6 @@ def gen_possibles_extra(c1,c2,c3,c4,c5,y1,y2,y3,y4,y5,nots):
     newmask += genmask(c4,y4,nots)
     newmask += genmask(c5,y5,nots)
 
-    #print("generated mask:"+newmask)
     logger.warning("generated mask:"+newmask)
     r = re.compile('^' + newmask + '$')
     fp = open('lower-only', 'r')
@@ -291,7 +345,7 @@ def nestor():
 
 @app.route("/")
 def hello():
-    return dkrender("new3.html", "pic1.png")
+    return dkrender("new4.html", "pic1.png")
     #return dkrender("wordlcheat.html", "pic1.png")
 
 @app.route("/words")
@@ -355,6 +409,9 @@ def form2():
 @app.route('/new3')
 def form3():
     return render_template('new3.html')
+@app.route('/new4')
+def form4():
+    return render_template('new4.html')
 
 @app.route('/data', methods=['POST', 'GET'])
 def data():
@@ -400,7 +457,24 @@ def data3():
         words, mask = new3_gen(ds, fd['nn'])
         return render_template('data2.html', form_data=fd, words=words, xlen=len(words), mask=mask)
 
+@app.route('/data4', methods=['POST', 'GET'])
+def data4():
+    if request.method == 'GET':
+        return "The URL /data4 is accessed directly. Try going to '/new4' to submit form"
+    if request.method == 'POST':
+        fd = request.form
+        ds = [
+            [fd['r1g1'], fd['r1g2'], fd['r1g3'], fd['r1g4'], fd['r1g5']],
+        ]
+        print(f"lang {fd['lang']}")
+        words, mask = new4_gen(ds, fd['nn'], fd['yy'], fd['lang'])
+        return render_template('data4.html', form_data=fd, words=words, xlen=len(words), mask=mask)
 
+# https://ojp.nationalrail.co.uk/service/pockettimetable/search
+@app.route('/TT0/')
+def send_tt0():
+    return send_from_directory(app.static_folder, 'SIMPLE.pdf')
+#https://www.greateranglia.co.uk/timetables
 @app.route('/TT1/')
 def send_tt1():
     return send_from_directory(app.static_folder, 'Timetable 10 Cambridge to Ely, Peterborough and Norwich Large Print.pdf')
